@@ -1,0 +1,126 @@
+## Φόρτωση των βιβλιοθηκών ##
+library(easypackages)
+libraries("dplyr", "magrittr")
+
+## Εισάγωγή του αρχείου Lab1_Sp_2 με το όνομα "Archipelagos"
+Archipelagos <- readxl::read_excel("./Lab_1_sp_2.xlsx")
+Archipelagos
+
+## Θα κάνω ΄ένα νεο αντικείμενο που μέσα θα έχει μόνο τα kingdoms and subkingdoms
+Kin_Subkin <- Archipelagos %>% select(Takht_kingdom, Takht_subkingdom)
+
+## Με την εντολή count της βιβλιοθήκης dplyr που βρέθηκε απο το cheatsheet που παρατέθηκε, ##
+##βρίσκω τον εκάστοτε αριθμό βασιλείων και υποβασιλείων ##
+
+NumKin <- count(Kin_Subkin, Takht_kingdom)
+NumSubKin <- count(Kin_Subkin, Takht_subkingdom)
+
+## 1)Αρα έχουμε (5 βασίλεια και 11 υποβασίλεια) ##
+## 2)Με την ίδια εντολή βρηκαμε και το ερώτημα 2 όπως φαίνεται στον πίνακα. 
+
+## Όμως λειπει ο νησιωτικός τύπος, άρα θα κάνω count για την μεταβλητή Geology στο αντικείμενο Archipelagos ##
+NumType <- Archipelagos %>% count(Geology) ## πίνακας 2##
+
+## 3)Κάνω group by και με τους 2 παράγοντες (νησιωτικός τύπος και βασίλεια) και βλέπω τον αριθμό από τον πίνακα ##
+NumIK <- Archipelagos %>%  select(Takht_kingdom, Island, Geology) %>% group_by(Takht_kingdom, Geology) %>% summarise(Count = n())
+NumIK
+
+## 4)Εφτιαξα ένα αντικείμενο που έχει ομαδοποιημένα τα νησιά κατά βασίλειο και νησιωτικό τύπο και με το summarise εκανα την στατιστική ανάλυση των επιμέρους column ##
+KinStatistics <- Archipelagos %>% group_by(Takht_kingdom, Geology) %>% summarise(max_Area = max(Area), min_Area = min(Area), mean_Area = mean(Area), median_Area = median(Area),SD_Area = sd(Area), max_Temp = max(Temperature), min_Temp = min(Temperature), mean_Temp = mean(Temperature), median_Temp = median(Temperature), SD_Temp = sd(Temperature), max_Elevation = max(Elevation), min_Elevation = min(Elevation), mean_Elevation = mean(Elevation), median_Elevation = median(Elevation), SD_Elevation = sd(Elevation), max_Precipitation = max(Precipitation), min_Precipitation = min(Precipitation), mean_Precipitation = mean(Precipitation), median_Precipitation = median(Precipitation), SD_Precipitation = sd(Precipitation), max_S_palms = max(S_palms), min_S_palms = min(S_palms), mean_S_palms = mean(S_palms), median_S_palms = median(S_palms), SD_S_palms = sd(S_palms), max_S_angio = max(S_angio), min_S_angio = min(S_angio), mean_S_angio = mean(S_angio), median_S_angio = median(S_angio), SD_S_angio = sd(S_angio))
+
+## 5)Το ίδιο με το 4) αλλά για αλλαξα το group by με τα υποβασίλεια.
+KinStatistics2 <- Archipelagos %>% group_by(Takht_subkingdom, Geology) %>% summarise(max_Area = max(Area), min_Area = min(Area), mean_Area = mean(Area), median_Area = median(Area),SD_Area = sd(Area), max_Temp = max(Temperature), min_Temp = min(Temperature), mean_Temp = mean(Temperature), median_Temp = median(Temperature), SD_Temp = sd(Temperature), max_Elevation = max(Elevation), min_Elevation = min(Elevation), mean_Elevation = mean(Elevation), median_Elevation = median(Elevation), SD_Elevation = sd(Elevation), max_Precipitation = max(Precipitation), min_Precipitation = min(Precipitation), mean_Precipitation = mean(Precipitation), median_Precipitation = median(Precipitation), SD_Precipitation = sd(Precipitation), max_S_palms = max(S_palms), min_S_palms = min(S_palms), mean_S_palms = mean(S_palms), median_S_palms = median(S_palms), SD_S_palms = sd(S_palms), max_S_angio = max(S_angio), min_S_angio = min(S_angio), mean_S_angio = mean(S_angio), median_S_angio = median(S_angio), SD_S_angio = sd(S_angio))
+
+## 6) Α)
+HighSpirits <- Archipelagos %>% select(Island, Elevation, Precipitation) %>% filter(Elevation > 563, Precipitation < 900)
+summary(HighSpirits) ## Άρα έχουμε 31 Νησιά (Length) ##
+HighSpirits2 <- Archipelagos %>% select(Island, Elevation, Precipitation, Geology) %>% filter(Elevation > 563, Precipitation < 900) %>% group_by(Geology) %>% summarise(count = n())
+## 2 fragments , 19 oceanic και 10 Shelf ##
+
+## Έφτιαξα νέο column με το όνομα Species όπου είναι το άθροισμα των ειδών και εκανα mean και median σε αυτό
+HighIslands <- Archipelagos %>% select(Island, Elevation, Precipitation, Geology, S_angio, S_palms) %>% filter(Elevation > 563, Precipitation < 900) %>% group_by(Geology) %>% mutate(Species = S_angio + S_palms) %>% summarise(mean_Species = mean(Species), median_Species = median(Species))
+## Το fragments με mean = 614 και median = 614 ##
+
+## Β) Φτιάχνω παρόμοια αντικείμενα με τα HighSpirits2 και HighIslands αλλά grouped by Kingdoms ##
+KinSpirits <- Archipelagos %>% select(Island, Elevation, Precipitation, Takht_kingdom) %>% filter(Elevation > 563, Precipitation < 900) %>% group_by(Takht_kingdom) %>% summarise(count = n())
+## Άρα έχω σε κάθε βασίλειο τόσα νησιά
+## Βλέπω πιο έχει τα περισσότερα είδη με median
+KinIslands <- Archipelagos %>% select(Island, Elevation, Precipitation, Takht_kingdom, S_angio, S_palms) %>% filter(Elevation > 563, Precipitation < 900) %>% group_by(Takht_kingdom) %>% mutate(Species = S_angio + S_palms) %>% summarise(mean_Species = mean(Species), median_Species = median(Species))
+KinIslands <- arrange(KinIslands, desc(mean_Species)) ## Άρα το βασίλειο Holarctis έχει τα περισσότερα είδη
+
+## C) Ομοίως με Β) αλλά για υποβασίλεια
+SubKinSpirits <- Archipelagos %>% select(Island, Elevation, Precipitation, Takht_subkingdom) %>% filter(Elevation > 563, Precipitation < 900) %>% group_by(Takht_subkingdom) %>% summarise(count = n())
+SubKinIslands <- Archipelagos %>% select(Island, Elevation, Precipitation, Takht_subkingdom, S_angio, S_palms) %>% filter(Elevation > 563, Precipitation < 900) %>% group_by(Takht_subkingdom) %>% mutate(Species = S_angio + S_palms) %>% summarise(mean_Species = mean(Species), median_Species = median(Species))
+SubKinIslands <- arrange(SubKinIslands, desc(mean_Species)) ## Άρα το ύποβασίλειο Tethyan έχει τα περισσότερα είδη
+
+## 7)Φτιάχνω παρόμοιο αντικείμενο με το αποπάνω με φίλτρο για υψόμετρο και κατακρήμνιση. Προσθέτω columns με τους λογάριθμους ##
+NewObject <- Archipelagos %>% select(Island, Elevation, Precipitation, Geology, S_angio, S_palms) %>% filter(Elevation > 563, Precipitation < 900) %>% mutate(Log_Elevation = log10(Elevation), Log_Percipitation = log10(Precipitation), Log_S_angio = log10(S_angio), Log_S_palms = log10(S_palms))
+
+##Τροποποιώ το NewObject ώστε να φιλτράρω και να εμφανίζονται μόνο τα νησιά με 100 ή λιγότερα είδη (Νέο column με ονομα Species = angio + palms) και κάνω arrange για υψόμετρο##
+NewObject <- Archipelagos %>% select(Island, Elevation, Precipitation, Geology, S_angio, S_palms) %>% filter(Elevation > 563, Precipitation < 900) %>% mutate(Log_Elevation = log10(Elevation), Log_Percipitation = log10(Precipitation), Log_S_angio = log10(S_angio), Log_S_palms = log10(S_palms), Species =  S_angio + S_palms) %>%  filter(Species <= 100) %>% arrange(Elevation)
+summary(NewObject) ## Έχουμε 6 νησιά
+arrange(NewObject, desc(Species)) ## Η Νήσος "Brava" έχει τα περισσότερα είδη με αριθμό 80 ##
+
+## Φόρτωση των βιβλιοθηκών ##
+library(easypackages)
+libraries("dplyr", "magrittr")
+
+## Εισάγωγή του αρχείου Lab1_Sp_2 με το όνομα "Archipelagos"
+Archipelagos <- readxl::read_excel("./Lab_1_sp_2.xlsx")
+Archipelagos
+
+## Θα κάνω ΄ένα νεο αντικείμενο που μέσα θα έχει μόνο τα kingdoms and subkingdoms
+Kin_Subkin <- Archipelagos %>% select(Takht_kingdom, Takht_subkingdom)
+
+## Με την εντολή count της βιβλιοθήκης dplyr που βρέθηκε απο το cheatsheet που παρατέθηκε, ##
+##βρίσκω τον εκάστοτε αριθμό βασιλείων και υποβασιλείων ##
+
+NumKin <- count(Kin_Subkin, Takht_kingdom)
+NumSubKin <- count(Kin_Subkin, Takht_subkingdom)
+
+## 1)Αρα έχουμε (5 βασίλεια και 11 υποβασίλεια) ##
+## 2)Με την ίδια εντολή βρηκαμε και το ερώτημα 2 όπως φαίνεται στον πίνακα. 
+
+## Όμως λειπει ο νησιωτικός τύπος, άρα θα κάνω count για την μεταβλητή Geology στο αντικείμενο Archipelagos ##
+NumType <- Archipelagos %>% count(Geology) ## πίνακας 2##
+
+## 3)Κάνω group by και με τους 2 παράγοντες (νησιωτικός τύπος και βασίλεια) και βλέπω τον αριθμό από τον πίνακα ##
+NumIK <- Archipelagos %>%  select(Takht_kingdom, Island, Geology) %>% group_by(Takht_kingdom, Geology) %>% summarise(Count = n())
+NumIK
+
+## 4)Εφτιαξα ένα αντικείμενο που έχει ομαδοποιημένα τα νησιά κατά βασίλειο και νησιωτικό τύπο και με το summarise εκανα την στατιστική ανάλυση των επιμέρους column ##
+KinStatistics <- Archipelagos %>% group_by(Takht_kingdom, Geology) %>% summarise(max_Area = max(Area), min_Area = min(Area), mean_Area = mean(Area), median_Area = median(Area),SD_Area = sd(Area), max_Temp = max(Temperature), min_Temp = min(Temperature), mean_Temp = mean(Temperature), median_Temp = median(Temperature), SD_Temp = sd(Temperature), max_Elevation = max(Elevation), min_Elevation = min(Elevation), mean_Elevation = mean(Elevation), median_Elevation = median(Elevation), SD_Elevation = sd(Elevation), max_Precipitation = max(Precipitation), min_Precipitation = min(Precipitation), mean_Precipitation = mean(Precipitation), median_Precipitation = median(Precipitation), SD_Precipitation = sd(Precipitation), max_S_palms = max(S_palms), min_S_palms = min(S_palms), mean_S_palms = mean(S_palms), median_S_palms = median(S_palms), SD_S_palms = sd(S_palms), max_S_angio = max(S_angio), min_S_angio = min(S_angio), mean_S_angio = mean(S_angio), median_S_angio = median(S_angio), SD_S_angio = sd(S_angio))
+
+## 5)Το ίδιο με το 4) αλλά για αλλαξα το group by με τα υποβασίλεια.
+KinStatistics2 <- Archipelagos %>% group_by(Takht_subkingdom, Geology) %>% summarise(max_Area = max(Area), min_Area = min(Area), mean_Area = mean(Area), median_Area = median(Area),SD_Area = sd(Area), max_Temp = max(Temperature), min_Temp = min(Temperature), mean_Temp = mean(Temperature), median_Temp = median(Temperature), SD_Temp = sd(Temperature), max_Elevation = max(Elevation), min_Elevation = min(Elevation), mean_Elevation = mean(Elevation), median_Elevation = median(Elevation), SD_Elevation = sd(Elevation), max_Precipitation = max(Precipitation), min_Precipitation = min(Precipitation), mean_Precipitation = mean(Precipitation), median_Precipitation = median(Precipitation), SD_Precipitation = sd(Precipitation), max_S_palms = max(S_palms), min_S_palms = min(S_palms), mean_S_palms = mean(S_palms), median_S_palms = median(S_palms), SD_S_palms = sd(S_palms), max_S_angio = max(S_angio), min_S_angio = min(S_angio), mean_S_angio = mean(S_angio), median_S_angio = median(S_angio), SD_S_angio = sd(S_angio))
+
+## 6) Α)
+HighSpirits <- Archipelagos %>% select(Island, Elevation, Precipitation) %>% filter(Elevation > 563, Precipitation < 900)
+summary(HighSpirits) ## Άρα έχουμε 31 Νησιά (Length) ##
+HighSpirits2 <- Archipelagos %>% select(Island, Elevation, Precipitation, Geology) %>% filter(Elevation > 563, Precipitation < 900) %>% group_by(Geology) %>% summarise(count = n())
+## 2 fragments , 19 oceanic και 10 Shelf ##
+
+## Έφτιαξα νέο column με το όνομα Species όπου είναι το άθροισμα των ειδών και εκανα mean και median σε αυτό
+HighIslands <- Archipelagos %>% select(Island, Elevation, Precipitation, Geology, S_angio, S_palms) %>% filter(Elevation > 563, Precipitation < 900) %>% group_by(Geology) %>% mutate(Species = S_angio + S_palms) %>% summarise(mean_Species = mean(Species), median_Species = median(Species))
+## Το fragments με mean = 614 και median = 614 ##
+
+## Β) Φτιάχνω παρόμοια αντικείμενα με τα HighSpirits2 και HighIslands αλλά grouped by Kingdoms ##
+KinSpirits <- Archipelagos %>% select(Island, Elevation, Precipitation, Takht_kingdom) %>% filter(Elevation > 563, Precipitation < 900) %>% group_by(Takht_kingdom) %>% summarise(count = n())
+## Άρα έχω σε κάθε βασίλειο τόσα νησιά
+## Βλέπω πιο έχει τα περισσότερα είδη με median
+KinIslands <- Archipelagos %>% select(Island, Elevation, Precipitation, Takht_kingdom, S_angio, S_palms) %>% filter(Elevation > 563, Precipitation < 900) %>% group_by(Takht_kingdom) %>% mutate(Species = S_angio + S_palms) %>% summarise(mean_Species = mean(Species), median_Species = median(Species))
+KinIslands <- arrange(KinIslands, desc(mean_Species)) ## Άρα το βασίλειο Holarctis έχει τα περισσότερα είδη
+
+## C) Ομοίως με Β) αλλά για υποβασίλεια
+SubKinSpirits <- Archipelagos %>% select(Island, Elevation, Precipitation, Takht_subkingdom) %>% filter(Elevation > 563, Precipitation < 900) %>% group_by(Takht_subkingdom) %>% summarise(count = n())
+SubKinIslands <- Archipelagos %>% select(Island, Elevation, Precipitation, Takht_subkingdom, S_angio, S_palms) %>% filter(Elevation > 563, Precipitation < 900) %>% group_by(Takht_subkingdom) %>% mutate(Species = S_angio + S_palms) %>% summarise(mean_Species = mean(Species), median_Species = median(Species))
+SubKinIslands <- arrange(SubKinIslands, desc(mean_Species)) ## Άρα το ύποβασίλειο Tethyan έχει τα περισσότερα είδη
+
+## 7)Φτιάχνω παρόμοιο αντικείμενο με το αποπάνω με φίλτρο για υψόμετρο και κατακρήμνιση. Προσθέτω columns με τους λογάριθμους ##
+NewObject <- Archipelagos %>% select(Island, Elevation, Precipitation, Geology, S_angio, S_palms) %>% filter(Elevation > 563, Precipitation < 900) %>% mutate(Log_Elevation = log10(Elevation), Log_Percipitation = log10(Precipitation), Log_S_angio = log10(S_angio), Log_S_palms = log10(S_palms))
+
+##Τροποποιώ το NewObject ώστε να φιλτράρω και να εμφανίζονται μόνο τα νησιά με 100 ή λιγότερα είδη (Νέο column με ονομα Species = angio + palms) και κάνω arrange για υψόμετρο##
+NewObject <- Archipelagos %>% select(Island, Elevation, Precipitation, Geology, S_angio, S_palms) %>% filter(Elevation > 563, Precipitation < 900) %>% mutate(Log_Elevation = log10(Elevation), Log_Percipitation = log10(Precipitation), Log_S_angio = log10(S_angio), Log_S_palms = log10(S_palms), Species =  S_angio + S_palms) %>%  filter(Species <= 100) %>% arrange(Elevation)
+summary(NewObject) ## Έχουμε 6 νησιά
+arrange(NewObject, desc(Species)) ## Η Νήσος "Brava" έχει τα περισσότερα είδη με αριθμό 80 ##
+
